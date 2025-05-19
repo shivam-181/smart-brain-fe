@@ -61,7 +61,7 @@ class Home extends Component {
   onButtonSubmit = () => {
   this.setState({ imageUrl: this.state.input });
 
-  fetch("http://localhost:3000/clarifai", {
+  fetch("https://smart-brain-1-gvpj.onrender.com/clarifai", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageUrl: this.state.input }),
@@ -73,7 +73,7 @@ class Home extends Component {
 
         // ✅ Ensure user ID is valid before making a request
         if (this.props.user?.id) {
-          fetch("http://localhost:3000/image", {
+          fetch("https://smart-brain-1-gvpj.onrender.com/image", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: this.props.user.id }),
@@ -176,7 +176,7 @@ class App extends Component {
       this.setState({ user: JSON.parse(storedUser) });
     }
       
-      const response = await fetch("http://localhost:3000");
+      const response = await fetch("https://smart-brain-1-gvpj.onrender.com");
       const data = await response.json();
       console.log("Backend Response:", data);
     } catch (error) {
