@@ -21,7 +21,7 @@ class Signin extends Component {
   onSubmitSignIn = (event) => {
     event.preventDefault(); // Prevents page reload
 
-    fetch("https://smart-brain-1-gvpj.onrender.com/signin", {
+    fetch("http://localhost:3000/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

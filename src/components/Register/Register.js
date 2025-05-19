@@ -20,7 +20,7 @@ const Register = ({ loadUser }) => {
     setError(""); // Clear any previous errors
 
     try {
-      const response = await fetch("https://smart-brain-1-gvpj.onrender.com/register", {
+      const response = await fetch("http://localhost:3000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
