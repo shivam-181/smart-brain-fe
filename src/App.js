@@ -24,30 +24,32 @@ class Home extends Component {
   }
 
   calculateFaceLocation = (data) => {
-    if (!data.outputs || !data.outputs[0].data.regions) {
-      console.log("No faces detected.");
-      this.setState({ boxes: [] });
-      return;
-    }
+  const regions = data?.outputs?.[0]?.data?.regions;
 
-    const image = document.getElementById("inputimage");
-    if (!image) return;
+  if (!regions || regions.length === 0) {
+    console.log("No faces detected.");
+    this.setState({ boxes: [] });
+    return;
+  }
 
-    const width = Number(image.width);
-    const height = Number(image.height);
+  const image = document.getElementById("inputimage");
+  if (!image) return;
 
-    const faces = data.outputs[0].data.regions.map((region) => {
-      const clarifaiFace = region.region_info.bounding_box;
-      return {
-        leftCol: clarifaiFace.left_col * width,
-        topRow: clarifaiFace.top_row * height,
-        rightCol: width - clarifaiFace.right_col * width,
-        bottomRow: height - clarifaiFace.bottom_row * height,
-      };
-    });
+  const width = Number(image.width);
+  const height = Number(image.height);
 
-    this.setState({ boxes: faces });
-  };
+  const faces = regions.map((region) => {
+    const clarifaiFace = region.region_info.bounding_box;
+    return {
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - clarifaiFace.right_col * width,
+      bottomRow: height - clarifaiFace.bottom_row * height,
+    };
+  });
+
+  this.setState({ boxes: faces });
+};
 
   displayFaceBox = (box) => {
     console.log(box);
