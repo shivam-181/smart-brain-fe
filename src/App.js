@@ -18,42 +18,37 @@ class Home extends Component {
     this.state = {
       input: "",
       imageUrl: "",
-      box: {},
+      boxes: [], // ✅ Fixed naming
       apiResponse: null,
     };
   }
 
   calculateFaceLocation = (data) => {
-  const regions = data?.outputs?.[0]?.data?.regions;
+    const regions = data?.outputs?.[0]?.data?.regions;
 
-  if (!regions || regions.length === 0) {
-    console.log("No faces detected.");
-    this.setState({ boxes: [] });
-    return;
-  }
+    if (!regions || regions.length === 0) {
+      console.log("No faces detected.");
+      this.setState({ boxes: [] });
+      return;
+    }
 
-  const image = document.getElementById("inputimage");
-  if (!image) return;
+    const image = document.getElementById("inputimage");
+    if (!image) return;
 
-  const width = Number(image.width);
-  const height = Number(image.height);
+    const width = Number(image.width);
+    const height = Number(image.height);
 
-  const faces = regions.map((region) => {
-    const clarifaiFace = region.region_info.bounding_box;
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - clarifaiFace.right_col * width,
-      bottomRow: height - clarifaiFace.bottom_row * height,
-    };
-  });
+    const faces = regions.map((region) => {
+      const clarifaiFace = region.region_info.bounding_box;
+      return {
+        leftCol: clarifaiFace.left_col * width,
+        topRow: clarifaiFace.top_row * height,
+        rightCol: width - clarifaiFace.right_col * width,
+        bottomRow: height - clarifaiFace.bottom_row * height,
+      };
+    });
 
-  this.setState({ boxes: faces });
-};
-
-  displayFaceBox = (box) => {
-    console.log(box);
-    this.setState({ box: box });
+    this.setState({ boxes: faces });
   };
 
   onInputChange = (event) => {
@@ -61,19 +56,24 @@ class Home extends Component {
   };
 
   onButtonSubmit = () => {
-  this.setState({ imageUrl: this.state.input });
+    this.setState({ imageUrl: this.state.input });
 
-  fetch("http://localhost:3000/clarifai", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageUrl: this.state.input }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data) {
-        this.displayFaceBox(this.calculateFaceLocation(data));
+    fetch("http://localhost:3000/clarifai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrl: this.state.input }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Full API Response:", JSON.stringify(data, null, 2));
 
-        // ✅ Ensure user ID is valid before making a request
+        if (data?.outputs?.[0]?.data?.regions?.length > 0) {
+          this.calculateFaceLocation(data);
+        } else {
+          console.log("No face detected or invalid response.");
+          this.setState({ boxes: [] });
+        }
+
         if (this.props.user?.id) {
           fetch("http://localhost:3000/image", {
             method: "PUT",
@@ -85,19 +85,14 @@ class Home extends Component {
               console.log("✅ Updated rank count:", count);
               this.props.user.entries = count;
               this.forceUpdate(); // Ensures UI updates
-            })  
-
+            })
             .catch((error) => console.error("Error updating rank:", error));
         } else {
           console.error("🚨 User ID is missing in Home. Check if loadUser was called.");
         }
-      }
-    })
-    .catch((error) => console.error("Error:", error));
-};
-
-
-
+      })
+      .catch((error) => console.error("Error:", error));
+  };
 
   render() {
     return (
@@ -141,43 +136,37 @@ class App extends Component {
   }
 
   loadUser = (data) => {
-  console.log("🔥 loadUser called with:", data); // Debugging log
+    console.log("🔥 loadUser called with:", data);
 
-  this.setState({ user: data }, () => {
-    localStorage.setItem("user", JSON.stringify(data)); // ✅ Save user in local storage
-  });
-
-
-  if (!data || !data.id) {
-    console.error("🚨 Invalid user data! Check backend response.");
-    return;
-  }
-
-  this.setState(
-    {
-      user: {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        entries: data.entries,
-        joined: data.joined,
-      },
-    },
-    () => {
-      console.log("✅ User state updated:", this.state.user);
+    if (!data || !data.id) {
+      console.error("🚨 Invalid user data! Check backend response.");
+      return;
     }
-  );
-};
 
+    this.setState(
+      {
+        user: {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          entries: data.entries,
+          joined: data.joined,
+        },
+      },
+      () => {
+        console.log("✅ User state updated:", this.state.user);
+        localStorage.setItem("user", JSON.stringify(this.state.user));
+      }
+    );
+  };
 
   async componentDidMount() {
     try {
-
       const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      this.setState({ user: JSON.parse(storedUser) });
-    }
-      
+      if (storedUser) {
+        this.setState({ user: JSON.parse(storedUser) });
+      }
+
       const response = await fetch("http://localhost:3000");
       const data = await response.json();
       console.log("Backend Response:", data);
@@ -191,7 +180,7 @@ class App extends Component {
   }
 
   render() {
-    console.log("App.js User State:", this.state.user); // ✅ Debugging log
+    console.log("App.js User State:", this.state.user);
     return (
       <Router>
         <div className="App">
